@@ -395,7 +395,7 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload test results to Codecov
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push' && github.repository == 'argoproj/argo-cd'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
         with:
           file: test-results/junit.xml
@@ -429,7 +429,7 @@ jobs:
       - build-go
       - changes
     env:
-      GOPATH: ${{ env.GOPATH || '~/go' }}
+      GOPATH: ~/go
       ARGOCD_FAKE_IN_CLUSTER: 'true'
       ARGOCD_SSH_DATA_PATH: '/tmp/argo-e2e/app/config/ssh'
       ARGOCD_TLS_DATA_PATH: '/tmp/argo-e2e/app/config/tls'
