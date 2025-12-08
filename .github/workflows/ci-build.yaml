@@ -135,7 +135,7 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
       - name: Install required packages
         run: |
-          sudo apt-get install git -y
+          (sudo -n apt-get update 2>/dev/null || apt-get update) && (sudo -n apt-get install -y git 2>/dev/null || apt-get install -y git || which git)
       - name: Switch to temporal branch so we re-attach head
         run: |
           git switch -c temporal-pr-branch
@@ -145,7 +145,8 @@ jobs:
           git fetch --prune --no-tags --depth=1 origin +refs/heads/*:refs/remotes/origin/*
       - name: Add ~/go/bin to PATH
         run: |
-          echo "/home/runner/go/bin" >> $GITHUB_PATH
+          export GOPATH=$(go env GOPATH)
+          echo "$GOPATH/bin" >> $GITHUB_PATH
       - name: Add /usr/local/bin to PATH
         run: |
           echo "/usr/local/bin" >> $GITHUB_PATH
@@ -160,7 +161,7 @@ jobs:
         # We install kustomize in the dist directory
       - name: Add dist to PATH
         run: |
-          echo "/home/runner/work/argo-cd/argo-cd/dist" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/dist" >> $GITHUB_PATH
       - name: Setup git username and email
         run: |
           git config --global user.name "John Doe"
@@ -199,7 +200,7 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
       - name: Install required packages
         run: |
-          sudo apt-get install git -y
+          (sudo -n apt-get update 2>/dev/null || apt-get update) && (sudo -n apt-get install -y git 2>/dev/null || apt-get install -y git || which git)
       - name: Switch to temporal branch so we re-attach head
         run: |
           git switch -c temporal-pr-branch
@@ -209,7 +210,8 @@ jobs:
           git fetch --prune --no-tags --depth=1 origin +refs/heads/*:refs/remotes/origin/*
       - name: Add ~/go/bin to PATH
         run: |
-          echo "/home/runner/go/bin" >> $GITHUB_PATH
+          export GOPATH=$(go env GOPATH)
+          echo "$GOPATH/bin" >> $GITHUB_PATH
       - name: Add /usr/local/bin to PATH
         run: |
           echo "/usr/local/bin" >> $GITHUB_PATH
@@ -224,7 +226,7 @@ jobs:
         # We install kustomize in the dist directory
       - name: Add dist to PATH
         run: |
-          echo "/home/runner/work/argo-cd/argo-cd/dist" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/dist" >> $GITHUB_PATH
       - name: Setup git username and email
         run: |
           git config --global user.name "John Doe"
@@ -255,41 +257,45 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
       - name: Create symlink in GOPATH
         run: |
-          mkdir -p ~/go/src/github.com/argoproj
-          cp -a ../argo-cd ~/go/src/github.com/argoproj
+          export GOPATH=$(go env GOPATH)
+          mkdir -p $GOPATH/src/github.com/argoproj
+          cp -a $GITHUB_WORKSPACE $GOPATH/src/github.com/argoproj/argo-cd
       - name: Add ~/go/bin to PATH
         run: |
-          echo "/home/runner/go/bin" >> $GITHUB_PATH
+          export GOPATH=$(go env GOPATH)
+          echo "$GOPATH/bin" >> $GITHUB_PATH
       - name: Add /usr/local/bin to PATH
         run: |
           echo "/usr/local/bin" >> $GITHUB_PATH
       - name: Download & vendor dependencies
         run: |
+          export GOPATH=$(go env GOPATH)
           # We need to vendor go modules for codegen yet
           go mod download
           go mod vendor -v
-        working-directory: /home/runner/go/src/github.com/argoproj/argo-cd
+        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
       - name: Install toolchain for codegen
         run: |
           make install-codegen-tools-local
           make install-go-tools-local
-        working-directory: /home/runner/go/src/github.com/argoproj/argo-cd
+        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
         # We install kustomize in the dist directory
       - name: Add dist to PATH
         run: |
-          echo "/home/runner/work/argo-cd/argo-cd/dist" >> $GITHUB_PATH
+          export GOPATH=$(go env GOPATH)
+          echo "$GOPATH/src/github.com/argoproj/argo-cd/dist" >> $GITHUB_PATH
       - name: Run codegen
         run: |
           set -x
           export GOPATH=$(go env GOPATH)
           git checkout -- go.mod go.sum
           make codegen-local
-        working-directory: /home/runner/go/src/github.com/argoproj/argo-cd
+        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
       - name: Check nothing has changed
         run: |
           set -xo pipefail
           git diff --exit-code -- . ':!go.sum' ':!go.mod' ':!assets/swagger.json' | tee codegen.patch
-        working-directory: /home/runner/go/src/github.com/argoproj/argo-cd
+        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
 
   build-ui:
     name: Build, test & lint UI code
@@ -335,7 +341,7 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - run: |
-          sudo apt-get install shellcheck
+          (sudo -n apt-get update 2>/dev/null || apt-get update) && (sudo -n apt-get install -y shellcheck 2>/dev/null || apt-get install -y shellcheck || which shellcheck)
           shellcheck -e SC2059 -e SC2154 -e SC2034 -e SC2016 -e SC1091 $(find . -type f -name '*.sh' | grep -v './ui/node_modules') | tee sc.log
           test ! -s sc.log
 
@@ -423,7 +429,7 @@ jobs:
       - build-go
       - changes
     env:
-      GOPATH: /home/ubuntu/go
+      GOPATH: ${{ env.GOPATH || '~/go' }}
       ARGOCD_FAKE_IN_CLUSTER: 'true'
       ARGOCD_SSH_DATA_PATH: '/tmp/argo-e2e/app/config/ssh'
       ARGOCD_TLS_DATA_PATH: '/tmp/argo-e2e/app/config/tls'
@@ -459,9 +465,9 @@ jobs:
           set -x
           curl -sfL https://get.k3s.io | sh -
           sudo chmod -R a+rw /etc/rancher/k3s
-          sudo mkdir -p $HOME/.kube && sudo chown -R ubuntu $HOME/.kube
+          sudo mkdir -p $HOME/.kube && sudo chown -R $USER $HOME/.kube
           sudo k3s kubectl config view --raw > $HOME/.kube/config
-          sudo chown ubuntu $HOME/.kube/config
+          sudo chown $USER $HOME/.kube/config
           sudo chmod go-r $HOME/.kube/config
           kubectl version
       - name: Restore go build cache
@@ -471,7 +477,8 @@ jobs:
           key: ${{ runner.os }}-go-build-v1-${{ github.run_id }}
       - name: Add ~/go/bin to PATH
         run: |
-          echo "/home/ubuntu/go/bin" >> $GITHUB_PATH
+          export GOPATH=$(go env GOPATH)
+          echo "$GOPATH/bin" >> $GITHUB_PATH
       - name: Add /usr/local/bin to PATH
         run: |
           echo "/usr/local/bin" >> $GITHUB_PATH
