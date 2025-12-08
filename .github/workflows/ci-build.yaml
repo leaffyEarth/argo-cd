@@ -255,11 +255,14 @@ jobs:
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version: ${{ env.GOLANG_VERSION }}
-      - name: Create symlink in GOPATH
+      - name: Setup GOPATH
         run: |
           export GOPATH=$(go env GOPATH)
           mkdir -p $GOPATH/src/github.com/argoproj
-          cp -a $GITHUB_WORKSPACE $GOPATH/src/github.com/argoproj/argo-cd
+          # Create symlink if workspace is not already in GOPATH
+          if [ ! -e "$GOPATH/src/github.com/argoproj/argo-cd" ] && [ "$GITHUB_WORKSPACE" != "$GOPATH/src/github.com/argoproj/argo-cd" ]; then
+            ln -s $GITHUB_WORKSPACE $GOPATH/src/github.com/argoproj/argo-cd
+          fi
       - name: Add ~/go/bin to PATH
         run: |
           export GOPATH=$(go env GOPATH)
@@ -273,29 +276,28 @@ jobs:
           # We need to vendor go modules for codegen yet
           go mod download
           go mod vendor -v
-        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
+        working-directory: ${{ github.workspace }}
       - name: Install toolchain for codegen
         run: |
           make install-codegen-tools-local
           make install-go-tools-local
-        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
+        working-directory: ${{ github.workspace }}
         # We install kustomize in the dist directory
       - name: Add dist to PATH
         run: |
-          export GOPATH=$(go env GOPATH)
-          echo "$GOPATH/src/github.com/argoproj/argo-cd/dist" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/dist" >> $GITHUB_PATH
       - name: Run codegen
         run: |
           set -x
           export GOPATH=$(go env GOPATH)
           git checkout -- go.mod go.sum
           make codegen-local
-        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
+        working-directory: ${{ github.workspace }}
       - name: Check nothing has changed
         run: |
           set -xo pipefail
           git diff --exit-code -- . ':!go.sum' ':!go.mod' ':!assets/swagger.json' | tee codegen.patch
-        working-directory: $GOPATH/src/github.com/argoproj/argo-cd
+        working-directory: ${{ github.workspace }}
 
   build-ui:
     name: Build, test & lint UI code
