@@ -16,9 +16,10 @@ env:
   # renovate: datasource=golang-version packageName=golang
   GOLANG_VERSION: '1.25.3'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+# Concurrency disabled for testing - allows parallel runs
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 permissions:
   contents: read
