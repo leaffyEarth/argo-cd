@@ -131,7 +131,7 @@ jobs:
       - name: Create symlink in GOPATH
         run: |
           mkdir -p ~/go/src/github.com/argoproj
-          rm -f ~/go/src/github.com/argoproj/argo-cd
+          rm -rf ~/go/src/github.com/argoproj/argo-cd
           ln -s $(pwd) ~/go/src/github.com/argoproj/argo-cd
       - name: Setup Golang
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
@@ -199,7 +199,7 @@ jobs:
       - name: Create symlink in GOPATH
         run: |
           mkdir -p ~/go/src/github.com/argoproj
-          rm -f ~/go/src/github.com/argoproj/argo-cd
+          rm -rf ~/go/src/github.com/argoproj/argo-cd
           ln -s $(pwd) ~/go/src/github.com/argoproj/argo-cd
       - name: Setup Golang
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
@@ -268,7 +268,7 @@ jobs:
           mkdir -p $GOPATH/src/github.com/argoproj
           # Remove existing symlink/directory and create new one if needed
           if [ "$GITHUB_WORKSPACE" != "$GOPATH/src/github.com/argoproj/argo-cd" ]; then
-            rm -f $GOPATH/src/github.com/argoproj/argo-cd
+            rm -rf $GOPATH/src/github.com/argoproj/argo-cd
             ln -s $GITHUB_WORKSPACE $GOPATH/src/github.com/argoproj/argo-cd
           fi
       - name: Add ~/go/bin to PATH
