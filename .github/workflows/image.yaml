@@ -71,7 +71,7 @@ jobs:
       # renovate: datasource=golang-version packageName=golang
       go-version: 1.25.3
       platforms: ${{ needs.set-vars.outputs.platforms }}
-      push: true
+      push: false
     secrets:
       quay_username: ${{ secrets.RELEASE_QUAY_USERNAME }}
       quay_password: ${{ secrets.RELEASE_QUAY_TOKEN }}
