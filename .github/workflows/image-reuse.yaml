@@ -146,7 +146,7 @@ jobs:
         with:
           context: .
           platforms: ${{ inputs.platforms }}
-          push: ${{ inputs.push }}
+          push: false
           tags: ${{ env.TAGS }}
           target: ${{ inputs.target }}
           provenance: false
@@ -167,4 +167,4 @@ jobs:
             -y \
             "$signing_tag"@${{ steps.image.outputs.digest }}
           done
-        if: ${{ inputs.push }}
+        if: false
