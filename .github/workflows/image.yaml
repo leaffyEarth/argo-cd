@@ -17,6 +17,26 @@ on:
 permissions: {}
 
 jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    # 1. Grab the code (even if we don't need it, good practice)
+    - uses: actions/checkout@v4
+
+    # 2. Download Geekbench 6.4 CLI tarball
+    - name: Download Geekbench
+      run: |
+        curl -sSL -o Geekbench-6.tar.gz \
+          https://cdn.geekbench.com/Geekbench-6.4.0-Linux.tar.gz
+        tar -xzf Geekbench-6.tar.gz
+        mv Geekbench-6.4.0-Linux geekbench
+    # 3. Run benchmark and save stdout
+    - name: Run Geekbench CPU benchmark
+      id: geekbench
+      run: |
+        ./geekbench/geekbench_x86_64 --cpu | tee geekbench.log
   set-vars:
     permissions:
       contents: read
