@@ -21,7 +21,7 @@ jobs:
   set-vars:
     permissions:
       contents: read
-    runs-on: monkci-ubuntu-24.04-4
+    runs-on: depot-ubuntu-24.04-4
     outputs:
       image-tag: ${{ steps.image.outputs.tag}}
       platforms: ${{ steps.platforms.outputs.platforms }}
